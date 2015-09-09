@@ -3,6 +3,12 @@
 
 from wsgiref.simple_server import make_server
 from subprocess import call
+import threading
+import socket
+import time
+import re
+
+server_host = 'syslab.ddns.us'
 
 config_file_path = '/root/tunnels'
 
@@ -103,6 +109,32 @@ def application(environ, start_response):
     	return html_success
     else:
     	return html % open(config_file_path,"r").read().replace('\n','|');
+
+def check_tunnel_status():
+	while True:
+		time.sleep(3*60)
+		print("Running tunnel checks")
+		try:
+			file_content = str(open(config_file_path,"r").read())
+			match_result = re.search(r'(.*?):(.*?):', file_content)
+			if (not match_result):
+				print("No port mapping specified.")
+				return
+			port_to_test = int(match_result.group(2))
+			print("Testing port %d" % port_to_test )
+		except Exception:
+			print("Error when parsing file")
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		try:
+			s.connect((server_host, port_to_test))
+			s.close()
+			print("Test OK")
+		except Exception:
+			print("Test failed. Re-running tunnels.")
+			call(["/root/run_tunnel"])
+
+t = threading.Thread(target=check_tunnel_status, name='StatusCheckThread')
+t.start()
 
 call(["/root/run_tunnel"])
 httpd = make_server('', 8080, application)
