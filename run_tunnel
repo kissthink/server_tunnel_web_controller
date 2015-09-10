@@ -1,0 +1,10 @@
+#!/bin/sh
+killall ssh
+server_host=133.130.48.42
+server_port=30000
+ssh_user=syslab
+for line in $(/bin/cat /root/tunnels)
+do
+	/bin/echo "Loading config $line"
+	/usr/bin/ssh -K 60 -N -R $line ${ssh_user}@${server_host} -p $server_port -i /root/.ssh/id_rsa &
+done

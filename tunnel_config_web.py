@@ -8,7 +8,7 @@ import socket
 import time
 import re
 
-server_host = 'syslab.ddns.us'
+server_host = '133.130.48.42'
 
 config_file_path = '/root/tunnels'
 
